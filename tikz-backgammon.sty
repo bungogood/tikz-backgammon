@@ -298,24 +298,33 @@
 \newcommand{\boardcaption}[1]{\gdef\bk@boardcaption{\bk@captionformat#1\par}}
 \boardcaption{}
 
-% command to setup the pieces for a new game without drawing anything
-\newcommand*\newpieces{
-	\foreach \x in {1,12,17,19}
-   	{\bk@setstate{\x}{white}}
-	\foreach \x in {6,8,13,24}
-		{\bk@setstate{\x}{black}}
-	\foreach \x in {1,24}
-		{\bk@setcount{\x}{2}}
-	\foreach \x in {12,19,13,6}
-		{\bk@setcount{\x}{5}}
-	\foreach \x in {17,8}
-		{\bk@setcount{\x}{3}}
+% command to setup new blank board
+\newcommand*\blankBoard{
+	\foreach \x in {1,...,24} {
+            \bk@setstate{\x}{white}
+            \bk@setcount{\x}{0}
+        }
 	\double{neutral}{64}
 	\bk@displaydicefalse
-}		
+}
+
+% command to setup new starting board
+\newcommand*\startingBoard{
+    \blankBoard
+    \foreach \x in {1,12,17,19}
+        {\bk@setstate{\x}{white}}
+    \foreach \x in {6,8,13,24}
+        {\bk@setstate{\x}{black}}
+    \foreach \x in {1,24}
+        {\bk@setcount{\x}{2}}
+    \foreach \x in {12,19,13,6}
+        {\bk@setcount{\x}{5}}
+    \foreach \x in {17,8}
+	{\bk@setcount{\x}{3}}
+}
 
 % command to set a new game (no longer displays it)  
-\let\newgame=\newpieces
+\let\newgame=\startingBoard
  
 % commands to move first black, then white
 % starred versions are for doubles
