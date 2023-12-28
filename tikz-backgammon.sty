@@ -24,6 +24,13 @@
 \usetikzlibrary{positioning,calc}
 \RequirePackage{tikz-backgammon-dice} % dice code in a separate package
 
+\newenvironment{bkgm}[1][]{
+  \blankBoard
+  \begin{center}
+}{
+  \end{center}
+}
+
 % Construct the board
 %
 % alternating colours for the board
