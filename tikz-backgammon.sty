@@ -24,41 +24,71 @@
 \usetikzlibrary{positioning,calc}
 \RequirePackage{tikz-backgammon-dice} % dice code in a separate package
 
+%%% Environment Definitions
 \newenvironment{bkgm}[1][]{
-  \blankBoard
-  \begin{center}
+    \bk@displaydicefalse
+    \boardcaption{}
+    \blankBoard
 }{
-  \end{center}
+    \bk@displaydicefalse
+    \boardcaption{}
 }
 
 % Construct the board
 %
 % alternating colours for the board
 \newcommand*{\bk@BW}{
-	\pgfmathifthenelse{mod(\x,2)==0}{1}{0}\let\bk@fillstyle\pgfmathresult}
+    \pgfmathifthenelse{mod(\x,2)==0}{1}{0}
+    \let\bk@fillstyle\pgfmathresult
+}
 \newcommand*{\bk@WB}{
-	\pgfmathifthenelse{mod(\x,2)==0}{0}{1}\let\bk@fillstyle\pgfmathresult}
+    \pgfmathifthenelse{mod(\x,2)==0}{0}{1}
+    \let\bk@fillstyle\pgfmathresult
+}
 % construct a  down point
 \newcommand*{\bk@dpoint}{%
-\bk@BW
-\draw[thick,style=\bk@fillstyle]
-     (\x,0) -- (\x+3/2,15) -- (\x+3,0) -- cycle; }
+    \bk@BW
+    \draw[thick,style=\bk@fillstyle]
+    (\x,0) -- (\x+3/2,15) -- (\x+3,0) -- cycle
+}
+
+\newcommand*{\bk@dpointr}{%
+    \bk@WB
+    \draw[thick,style=\bk@fillstyle]
+    (\x,0) -- (\x+3/2,15) -- (\x+3,0) -- cycle
+}
 % construct an up point
 \newcommand{\bk@upoint}{%
-\bk@WB
-\draw[thick,style=\bk@fillstyle]
-     (\x,32) -- (\x+3/2,17) -- (\x+3,32) -- cycle; }
+    \bk@WB
+    \draw[thick,style=\bk@fillstyle]
+    (\x,32) -- (\x+3/2,17) -- (\x+3,32) -- cycle
+}
+
+\newcommand{\bk@upointr}{%
+    \bk@BW
+    \draw[thick,style=\bk@fillstyle]
+    (\x,32) -- (\x+3/2,17) -- (\x+3,32) -- cycle
+} 
 % set basic tikz parameters for the board points, dice, and stones;
 % in order to scale text and nodes, node styles are specified 'transform shape'
 %   
-\tikzset{1/.style={fill=\boardblack},
-				0/.style={fill=\boardwhite},
-				stone/.style={transform shape,draw=black,circle,minimum size=3*\defaultxy,inner sep=0pt,font={\sffamily},text={\bk@stonetextcolor}},
-				sans/.style={transform shape,font={\sffamily},inner sep=0pt,outer sep=0pt},
-				white double/.style={line color=\black,text=\black},
-				black double/.style={dice color=\black,text=\white},
-				neutral double/.style={dice color=\black,text=\white},
-				}
+\tikzset{
+    1/.style={fill=\boardblack},
+    0/.style={fill=\boardwhite},
+    stone/.style={
+        transform shape,
+        draw=black,
+        circle,
+        minimum size=3*\defaultxy,
+        inner sep=0pt,
+        font={\sffamily},
+        text={\bk@stonetextcolor}
+    },
+    sans/.style={transform shape,font={\sffamily},inner sep=0pt,outer sep=0pt},
+    white double/.style={line color=\black,text=\black},
+    black double/.style={dice color=\black,text=\white},
+    neutral double/.style={dice color=\black,text=\white},
+}
 
 % initialization
 % These should be made key values
@@ -128,7 +158,8 @@
 		\number\numexpr 25-\bk@nodename\relax
 	\fi}
 \newcommand*\bk@wstart{\ifbk@black\bk@downstart\else\bk@upstart\fi}
-\newcommand{\bk@drawboard}{%
+
+\newcommand{\bk@drawboardL}{%
 % draw the border and the point numbers
 % the nodes are numbered internally from the point of view of black
 % nodes are labelled according to the view of the person playing
@@ -169,6 +200,44 @@
   \foreach \x in {21,24,...,36}
      \bk@upoint;
 }
+
+\newcommand{\bk@drawboardR}{%
+    \draw[line width=4pt] (0,0) -- (0,32) -- (39,32) -- (39,0) -- cycle;
+    \foreach \x in {1,...,6}{
+    		\let\bk@nodename\x
+		\node[sans] (\bk@nodename) at (\bk@right-\x*3,\bk@upstart)  {\bk@nodelabel}; 
+		\pgfmathparse{int(\x+6)}\let\bk@nodename\pgfmathresult
+		\node[sans] (\bk@nodename) at (\bk@left-\x*3+21,\bk@upstart)  {\bk@nodelabel}; 
+		\pgfmathparse{int(\x+12)}\let\bk@nodename\pgfmathresult
+		\node[sans] (\bk@nodename) at (\bk@left+\x*3,\bk@downstart)  {\bk@nodelabel};
+		\pgfmathparse{int(\x+18)}\let\bk@nodename\pgfmathresult
+		 \node[sans] (\bk@nodename) at (\bk@right+\x*3-21,\bk@downstart)  {\bk@nodelabel};
+    }
+% now draw the first half points
+  \foreach \x in {0,3,...,15}
+     \bk@dpoint;
+  \foreach \x in {0,3,...,15}
+     \bk@upoint;
+% draw the bar and set the anchors for bar and the doubling cube and dice rolls
+  \draw[very thick,fill=\barcolor](18,0) -- (18,32) -- (21,32) -- (21,0) -- cycle;
+  \coordinate (barcenter) at (19.5,14);
+  \coordinate (whitebar) at (19.5,28);
+  \coordinate (blackbar) at (19.5,4);
+  \coordinate (black double) at (42, 4);
+  \coordinate (white double) at (42, 28);
+  \coordinate (neutral double) at (42,16);
+  \coordinate (black dice) at (9,16);
+  \coordinate (white dice) at (30,16);
+  \coordinate (caption) at (19.5,-4);
+  \coordinate (offblack) at (-4,4);
+  \coordinate (offwhite) at (-4,28);
+% draw the other half of the points %%% colores cambiados %%%
+  \foreach \x in {21,24,...,36}
+     \bk@dpointr;
+  \foreach \x in {21,24,...,36}
+     \bk@upointr;
+}
+
 %  commands to place markers on a point and set its state
 %  for users to make arbitrary board configurations
 
@@ -291,14 +360,6 @@
 	\bk@parsedice(#1)%
 }
 
-% user command to draw a blank board
-\newcommand*{\blankboard}[1][]{%
-	\double{neutral}{64}
-	\begin{tikzpicture}[x=\defaultxy,y=\defaultxy,#1]
-		\bk@drawboard
-	\end{tikzpicture}
-}
-
 % user commands to set the caption for a board
 \newcommand{\boardcaptionformat}[1]{\gdef\bk@captionformat{#1}}
 \boardcaptionformat{}
@@ -380,30 +441,49 @@
 	\bk@whitesingle{#3}{#4}{#3}{#4}
 }
 
-% command to display the current state of the board
-\newcommand*\whiteboard{\bk@blackfalse\bk@displayboard}
-\newcommand*\blackboard{\bk@blacktrue\bk@displayboard}
-\newcommand{\bk@displayboard}[1][]{%
-  \par\vspace{\betweengameskip}
-  \begin{tikzpicture}[x=\defaultxy,y=\defaultxy,#1]
-		\bk@drawboard
+% Common board display command
+\newcommand{\bk@commonboarddisplay}[2]{%
+    \par\vspace{\betweengameskip}
+    \begin{tikzpicture}[x=\defaultxy,y=\defaultxy,#2]
+        \csname bk@drawboard#1\endcsname
 		\foreach \x in {1,...,24}{
- 			\bk@placepoint{\x}{\the\csname c@bk@pt\x\endcsname}}
- 		\bk@placedouble
+			\bk@placepoint{\x}{\the\csname c@bk@pt\x\endcsname}}
+		% \bk@placedouble
 		\bk@placebar
 		\ifbk@displaydice
 			\csname bk@\bk@dicestate dice\endcsname{\bk@dice@one}{\bk@dice@two}\fi
 		\node[align=center,anchor=north,inner sep=0pt] at (caption)
 				{\bk@boardcaption};
-	\end{tikzpicture}
+    \end{tikzpicture}
 % after drawing the board we reset the caption and the dice display
-	\bk@displaydicefalse
-	\boardcaption{}
+	% \bk@displaydicefalse
+	% \boardcaption{}
 }
+
+\newcommand*\whiteboardL{
+    \bk@blackfalse
+    \bk@commonboarddisplay{L}{}
+}
+\newcommand*\blackboardL{
+    \bk@blacktrue
+    \bk@commonboarddisplay{L}{}
+}
+\newcommand*\whiteboardR{
+    \bk@blackfalse
+    \bk@commonboarddisplay{R}{}
+}
+\newcommand*\blackboardR{
+    \bk@blacktrue
+    \bk@commonboarddisplay{R}{}
+}
+
+\let\whiteboard\whiteboardR
+\let\blackboard\blackboardR
+\let\board\blackboardR
+
 \endinput
 % Still to be added:
 % need commands for entering from the bar and bearing off
 % alternative input of moves using standard notation  e.g.
 \newcommand{\move}[1]{\bk@parsemove(#1)}
 \def\bk@parsemove(#1/#2,#3/#4){\blackmove{#1}{#2}{#3}{#4}}
-
