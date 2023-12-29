@@ -26,10 +26,12 @@
 
 %%% Environment Definitions
 \newenvironment{bkgm}[1][]{
+    \bk@displaydoublefalse
     \bk@displaydicefalse
     \boardcaption{}
-    \blankBoard
+    \blankboard
 }{
+    \bk@displaydoublefalse
     \bk@displaydicefalse
     \boardcaption{}
 }
@@ -46,7 +48,7 @@
     \let\bk@fillstyle\pgfmathresult
 }
 % construct a  down point
-\newcommand*{\bk@dpoint}{%
+\newcommand*{\bk@dpointl}{%
     \bk@BW
     \draw[thick,style=\bk@fillstyle]
     (\x,0) -- (\x+3/2,15) -- (\x+3,0) -- cycle
@@ -58,7 +60,7 @@
     (\x,0) -- (\x+3/2,15) -- (\x+3,0) -- cycle
 }
 % construct an up point
-\newcommand{\bk@upoint}{%
+\newcommand{\bk@upointl}{%
     \bk@WB
     \draw[thick,style=\bk@fillstyle]
     (\x,32) -- (\x+3/2,17) -- (\x+3,32) -- cycle
@@ -147,6 +149,7 @@
 %
 \newif\ifbk@black\bk@blacktrue % sets the view of the board
 \newif\ifbk@displaydice\bk@displaydicefalse % toggle to display the dice or not
+\newif\ifbk@displaydouble\bk@displaydoublefalse % toggle to display the double or not
 \newcommand*\bk@right{40.5}
 \newcommand*\bk@left{-1.5}
 \newcommand*\bk@upstart{-1.75}
@@ -178,9 +181,9 @@
     }
 % now draw the first half points
   \foreach \x in {0,3,...,15}
-     \bk@dpoint;
+     \bk@dpointr;
   \foreach \x in {0,3,...,15}
-     \bk@upoint;
+     \bk@upointr;
 % draw the bar and set the anchors for bar and the doubling cube and dice rolls
   \draw[very thick,fill=\barcolor](18,0) -- (18,32) -- (21,32) -- (21,0) -- cycle;
   \coordinate (barcenter) at (19.5,14);
@@ -196,9 +199,9 @@
   \coordinate (offwhite) at (-4,28);
 % draw the other half of the points
   \foreach \x in {21,24,...,36}
-     \bk@dpoint;
+     \bk@dpointl;
   \foreach \x in {21,24,...,36}
-     \bk@upoint;
+     \bk@upointl;
 }
 
 \newcommand{\bk@drawboardR}{%
@@ -215,9 +218,9 @@
     }
 % now draw the first half points
   \foreach \x in {0,3,...,15}
-     \bk@dpoint;
+     \bk@dpointl;
   \foreach \x in {0,3,...,15}
-     \bk@upoint;
+     \bk@upointl;
 % draw the bar and set the anchors for bar and the doubling cube and dice rolls
   \draw[very thick,fill=\barcolor](18,0) -- (18,32) -- (21,32) -- (21,0) -- cycle;
   \coordinate (barcenter) at (19.5,14);
@@ -243,14 +246,14 @@
 
 % first for a black point (user command)
 \newcommand{\blackpoint}[2]{%
-  \bk@setstate{#1}{black}%
+  \bk@setstate{#1}{\black}%
   \bk@setcount{#1}{#2}%
   \ignorespaces
 }
 % same again for a white point (this is from point in whites view)
 \newcommand{\whitepoint}[2]{%
   \def\bk@tmp{\numexpr 25-#1\relax}%
-  \bk@setstate{\the\bk@tmp}{white}%
+  \bk@setstate{\the\bk@tmp}{\white}%
   \bk@setcount{\the\bk@tmp}{#2}%
   \ignorespaces
 }
@@ -263,19 +266,31 @@
 	\bk@maxstonesfalse%
   \let\ptname#1%
   \def\bk@tmpb{black}%
+  % not sure what this does
   \ifcsstrequal{\usestate{\ptname}}{\bk@tmpb}{\let\bk@stonetextcolor\white}{\let\bk@stonetextcolor\black}
   \ifnumcomp{#2}{<}{1}%
      {}
-     {\ifnumcomp{#2}{>}{5}%
-     		{\gdef\bk@tmp{5}\bk@maxstonestrue\xdef\bk@tmpa{#2}}
-				{\gdef\bk@tmp{#2}}
-     {\pgfmathparse{ifthenelse(#1>12,"below","above")}\let\bk@pos\pgfmathresult
-         \foreach \x in {1,...,\bk@tmp}
-            \node[fill=\usestate{\ptname},style=stone,\bk@pos=(3*\x)-2 of \ptname]
-              	{\ifbk@maxstones
-									\pgfmathparse{ifthenelse(\x==5,\bk@tmpa,"")}\pgfmathresult
-									\else\relax\fi};
-      }}
+     {
+        \ifnumcomp{#2}{>}{5} {
+            \gdef\bk@tmp{5}\bk@maxstonestrue\xdef\bk@tmpa{#2}
+        } {
+            \gdef\bk@tmp{#2}
+        }
+        {
+            \pgfmathparse{ifthenelse(#1>12,"below","above")}
+            \let\bk@pos\pgfmathresult
+            \foreach \x in {1,...,\bk@tmp}
+                \node[fill=\usestate{\ptname},style=stone,\bk@pos=(3*\x)-2 of \ptname]
+            {
+                \ifbk@maxstones
+			        \pgfmathparse{ifthenelse(\x==5,\bk@tmpa,"")}
+                    \pgfmathresult
+			\else
+                    \relax
+                \fi
+            };
+        }
+      }
 }
 % command to place stones on the bar
 \newcommand{\bk@placebar}{%
@@ -284,11 +299,11 @@
 	\bk@maxstonesfalse
 	\ifnumcomp{\y}{=}{0}
 	{\global\let\bk@stonetextcolor\black
-	 \gdef\bk@stonecolor{white}
+	 \gdef\bk@stonecolor{\white}
 	 \gdef\bk@barpos{whitebar}
 	 \gdef\bk@orient{below}}
 	{\global\let\bk@stonetextcolor\white
-	 \gdef\bk@stonecolor{black}
+	 \gdef\bk@stonecolor{\black}
 	 \gdef\bk@barpos{blackbar}
 	 \gdef\bk@orient{above}}
 	\ifnumcomp{\bk@barcount}{>}{3}
@@ -307,20 +322,23 @@
 % syntax is \onbar{colour}{amount}
 % this is the manual set command so we don't increment the counter
 \newcommand*{\onbar}[2]{%
-	\ifstrequal{#1}{black}
-		{\setcounter{bk@bar1}{#2}}
-		{\ifstrequal{#1}{white}
-			{\setcounter{bk@bar0}{#2}}
-			{\PackageError{tikz-backgammon}{Only 'white' or 'black' can be on the bar}{Check your spelling!}}
-		}
+    \ifstrequal{#1}{black} {
+        \setcounter{bk@bar1}{#2}
+    } { \ifstrequal{#1}{white} {
+        \setcounter{bk@bar0}{#2}
+    } {
+        \PackageError{tikz-backgammon}{Only 'white' or 'black' can be on the bar}{Check your spelling!}
+    }}
 }
 % user command to set a double
 % syntax is \double{<owner>}{amount}
 \newcommand*{\double}[2]{%
-  \def\bk@doublenum{#2}
-  \ifstrequal{#1}{neutral}
-     {\gdef\bk@doublestate{neutral double}}
-     {\ifstrequal{#1}{white}
+    \bk@displaydoubletrue
+    \def\bk@doublenum{#2}
+    \ifstrequal{#1}{neutral} {
+        \gdef\bk@doublestate{neutral double}
+    } {
+        \ifstrequal{#1}{white}
         {\gdef\bk@doublestate{white double}}
         {\gdef\bk@doublestate{black double}}
      }
@@ -333,15 +351,15 @@
 % command to display the dice
 \newcommand*{\bk@whitedice}[2]{%
 	\node at (white dice) [left=0pt] (dice) 
-		{\drawdie[dot color=\black,line color=\black]{#1}};
+		{\drawdie[dot color=\black,line color=\black,dice color=\white]{#1}};
 	\node at (white dice) [right=0pt] (dice) 
-		{\drawdie[dot color=\black,line color=\black]{#2}};
+		{\drawdie[dot color=\black,line color=\black,dice color=\white]{#2}};
 }
 \newcommand*{\bk@blackdice}[2]{%
 	\node at (black dice) [left=0pt] (dice) 
-		{\drawdie[dot color=\white,dice color=\black]{#1}};
+		{\drawdie[dot color=\white,line color=\black,dice color=\black]{#1}};
 	\node at (black dice) [right=0pt] (dice) 
-		{\drawdie[dot color=\white,dice color=\black]{#2}};
+		{\drawdie[dot color=\white,line color=\black,dice color=\black]{#2}};
 }
 % This is an internal command to parse a dice role in the form (nm)
 % into two separate parts so that the dice can be generated
@@ -367,18 +385,16 @@
 \boardcaption{}
 
 % command to setup new blank board
-\newcommand*\blankBoard{
-	\foreach \x in {1,...,24} {
-            \bk@setstate{\x}{white}
-            \bk@setcount{\x}{0}
-        }
-	\double{neutral}{64}
-	\bk@displaydicefalse
+\newcommand*\blankboard{
+    \foreach \x in {1,...,24} {
+        \bk@setstate{\x}{white}
+        \bk@setcount{\x}{0}
+    }
 }
 
 % command to setup new starting board
-\newcommand*\startingBoard{
-    \blankBoard
+\newcommand*\startingboard{
+    \blankboard
     \foreach \x in {1,12,17,19}
         {\bk@setstate{\x}{white}}
     \foreach \x in {6,8,13,24}
@@ -392,7 +408,7 @@
 }
 
 % command to set a new game (no longer displays it)  
-\let\newgame=\startingBoard
+\let\newgame=\startingboard
  
 % commands to move first black, then white
 % starred versions are for doubles
@@ -446,14 +462,18 @@
     \par\vspace{\betweengameskip}
     \begin{tikzpicture}[x=\defaultxy,y=\defaultxy,#2]
         \csname bk@drawboard#1\endcsname
-		\foreach \x in {1,...,24}{
-			\bk@placepoint{\x}{\the\csname c@bk@pt\x\endcsname}}
-		% \bk@placedouble
-		\bk@placebar
-		\ifbk@displaydice
-			\csname bk@\bk@dicestate dice\endcsname{\bk@dice@one}{\bk@dice@two}\fi
-		\node[align=center,anchor=north,inner sep=0pt] at (caption)
-				{\bk@boardcaption};
+        \foreach \x in {1,...,24} {
+            \bk@placepoint{\x}{\the\csname c@bk@pt\x\endcsname}
+        }
+        \ifbk@displaydouble
+            \bk@placedouble
+        \fi
+        \bk@placebar
+        \ifbk@displaydice
+            \csname bk@\bk@dicestate dice\endcsname{\bk@dice@one}{\bk@dice@two}
+        \fi
+	\node[align=center,anchor=north,inner sep=0pt] at (caption)
+			{\bk@boardcaption};
     \end{tikzpicture}
 % after drawing the board we reset the caption and the dice display
 	% \bk@displaydicefalse
@@ -479,6 +499,8 @@
 
 \let\whiteboard\whiteboardR
 \let\blackboard\blackboardR
+\let\boardL\blackboardL
+\let\boardR\blackboardR
 \let\board\blackboardR
 
 \endinput
